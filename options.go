@@ -6,7 +6,7 @@ import (
 )
 
 const usage = `
-gowc 0.1.0
+gowc ` + version + `
 A Go word count (wc) clone - print newline, word, and byte counts for each file 
 
 USAGE:
