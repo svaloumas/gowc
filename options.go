@@ -29,14 +29,15 @@ ARGS:
 `
 
 type options struct {
-	bytes     bool
-	chars     bool
-	lines     bool
-	maxLine   bool
-	words     bool
-	version   bool
-	filesFrom string
-	filepaths []string
+	bytes      bool
+	chars      bool
+	lines      bool
+	maxLine    bool
+	words      bool
+	version    bool
+	bufferSize int
+	filesFrom  string
+	filepaths  []string
 }
 
 func parseOptions() *options {
@@ -53,6 +54,8 @@ func parseOptions() *options {
 	flag.BoolVar(&opts.words, "words", false, "print words")
 	flag.BoolVar(&opts.version, "v", false, "print version")
 	flag.BoolVar(&opts.version, "version", false, "print version")
+	flag.IntVar(&opts.bufferSize, "bs", 4*1024, "buffer size to process concurrently")
+	flag.IntVar(&opts.bufferSize, "buffer-size", 4*1024, "buffer size to process concurrently")
 
 	flag.StringVar(&opts.filesFrom, "files0-from", "", "read input from given file")
 

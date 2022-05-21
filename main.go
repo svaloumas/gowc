@@ -9,9 +9,6 @@ import (
 	"unicode"
 )
 
-// Should be 4 * 1024 when shipped
-const BufferSize = 10
-
 type chunk struct {
 	bufChan chan []byte
 	bufSize int
@@ -28,24 +25,24 @@ type counter struct {
 	endsWithChar   bool
 }
 
-func readFileInChunks(fp *os.File, fileSize int) []*chunk {
+func readFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
 
-	concurrency := fileSize / BufferSize
+	concurrency := fileSize / bufferSize
 	chunks := make([]*chunk, concurrency)
 	for i := 0; i < concurrency; i++ {
 		c := &chunk{
 			bufChan: make(chan []byte),
-			bufSize: BufferSize,
-			offset:  BufferSize * i,
+			bufSize: bufferSize,
+			offset:  bufferSize * i,
 		}
 		chunks[i] = c
 	}
 
-	if remainder := fileSize % BufferSize; remainder != 0 {
+	if remainder := fileSize % bufferSize; remainder != 0 {
 		c := &chunk{
 			bufChan: make(chan []byte),
 			bufSize: remainder,
-			offset:  BufferSize * concurrency,
+			offset:  bufferSize * concurrency,
 		}
 		concurrency++
 		chunks = append(chunks, c)
@@ -96,7 +93,7 @@ func processBuffer(bufChan <-chan []byte, opts *options, order int) *counter {
 		chunkCounter.chars = len(bufString)
 	}
 	if opts.lines || opts.maxLine {
-		newLineIdxs := continuousNewLineIndexes(bufString, order)
+		newLineIdxs := continuousNewLineIndexes(bufString, order, opts.bufferSize)
 		chunkCounter.lines = len(newLineIdxs)
 		chunkCounter.newLineIdxs = newLineIdxs
 	}
@@ -173,11 +170,11 @@ func aggregate(c *counter, chunkCounter *counter) {
 	c.newLineIdxs = append(c.newLineIdxs, chunkCounter.newLineIdxs...)
 }
 
-func continuousNewLineIndexes(s string, chunkOrder int) []int {
+func continuousNewLineIndexes(s string, chunkOrder, bufferSize int) []int {
 	indexes := []int{}
 	for i := 0; i < len(s); i++ {
 		if s[i] == '\n' {
-			orderedIdx := i + (chunkOrder * BufferSize)
+			orderedIdx := i + (chunkOrder * bufferSize)
 			indexes = append(indexes, orderedIdx)
 		}
 	}
@@ -204,7 +201,7 @@ func main() {
 		wg.Add(1)
 		go func(string) {
 			c := &counter{}
-			chunks := readFileInChunks(fp, int(fi.Size()))
+			chunks := readFileInChunks(fp, int(fi.Size()), opts.bufferSize)
 			chunkCounterChan := processChunks(chunks, opts)
 
 			for chunkCounter := range chunkCounterChan {
