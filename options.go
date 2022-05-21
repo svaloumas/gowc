@@ -59,6 +59,12 @@ func parseOptions() *options {
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
+	if !opts.lines && !opts.words && !opts.bytes && !opts.chars && !opts.maxLine {
+		opts.lines = true
+		opts.words = true
+		opts.bytes = true
+	}
+
 	opts.filepaths = flag.Args()
 	return opts
 }

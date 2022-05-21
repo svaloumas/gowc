@@ -28,18 +28,21 @@ type counter struct {
 	endsWithChar   bool
 }
 
-func readFileInChunks(fp *os.File, fileSize int) []chunk {
+func readFileInChunks(fp *os.File, fileSize int) []*chunk {
 
 	concurrency := fileSize / BufferSize
-	chunks := make([]chunk, concurrency)
+	chunks := make([]*chunk, concurrency)
 	for i := 0; i < concurrency; i++ {
-		chunks[i].bufChan = make(chan []byte)
-		chunks[i].bufSize = BufferSize
-		chunks[i].offset = BufferSize * i
+		c := &chunk{
+			bufChan: make(chan []byte),
+			bufSize: BufferSize,
+			offset:  BufferSize * i,
+		}
+		chunks[i] = c
 	}
 
 	if remainder := fileSize % BufferSize; remainder != 0 {
-		c := chunk{
+		c := &chunk{
 			bufChan: make(chan []byte),
 			bufSize: remainder,
 			offset:  BufferSize * concurrency,
@@ -51,7 +54,7 @@ func readFileInChunks(fp *os.File, fileSize int) []chunk {
 	for i := 0; i < concurrency; i++ {
 		idx := i
 
-		go func(chunks []chunk, i int) {
+		go func(chunks []*chunk, i int) {
 
 			chunk := chunks[idx]
 			buf := make([]byte, chunk.bufSize)
@@ -68,11 +71,11 @@ func readFileInChunks(fp *os.File, fileSize int) []chunk {
 	return chunks
 }
 
-func processChunks(chunks []chunk) <-chan *counter {
+func processChunks(chunks []*chunk, opts *options) <-chan *counter {
 	out := make(chan *counter)
 	go func() {
 		for i, chunk := range chunks {
-			c := processBuffer(chunk.bufChan, i)
+			c := processBuffer(chunk.bufChan, opts, i)
 			out <- c
 		}
 		close(out)
@@ -80,29 +83,37 @@ func processChunks(chunks []chunk) <-chan *counter {
 	return out
 }
 
-func processBuffer(bufChan <-chan []byte, order int) *counter {
+func processBuffer(bufChan <-chan []byte, opts *options, order int) *counter {
 	bytes := <-bufChan
 
 	bufString := string(bytes)
-	fields := strings.Fields(bufString)
 
-	bufRunes := []rune(bufString)
-	firstRune := bufRunes[0]
-	lastRune := bufRunes[len(bufRunes)-1]
+	chunkCounter := &counter{}
+	if opts.bytes {
+		chunkCounter.bytes = len(bytes)
+	}
+	if opts.chars {
+		chunkCounter.chars = len(bufString)
+	}
+	if opts.lines || opts.maxLine {
+		newLineIdxs := continuousNewLineIndexes(bufString, order)
+		chunkCounter.lines = len(newLineIdxs)
+		chunkCounter.newLineIdxs = newLineIdxs
+	}
+	if opts.words {
+		fields := strings.Fields(bufString)
+		chunkCounter.words = len(fields)
 
-	newLineIdxs := continuousNewLineIndexes(bufString, order)
-	chunkCounter := &counter{
-		bytes:       len(bytes),
-		chars:       len(bufString),
-		lines:       len(newLineIdxs),
-		words:       len(fields),
-		newLineIdxs: newLineIdxs,
-	}
-	if !unicode.IsSpace(firstRune) {
-		chunkCounter.startsWithChar = true
-	}
-	if !unicode.IsSpace(lastRune) {
-		chunkCounter.endsWithChar = true
+		bufRunes := []rune(bufString)
+		firstRune := bufRunes[0]
+		lastRune := bufRunes[len(bufRunes)-1]
+
+		if !unicode.IsSpace(firstRune) {
+			chunkCounter.startsWithChar = true
+		}
+		if !unicode.IsSpace(lastRune) {
+			chunkCounter.endsWithChar = true
+		}
 	}
 	return chunkCounter
 }
@@ -141,17 +152,12 @@ func printResults(c *counter, maxLine int, filename string, opts *options) {
 	if opts.maxLine {
 		fmt.Printf("\t%d", maxLine)
 	}
-	if !opts.lines && !opts.words && !opts.bytes && !opts.chars && !opts.maxLine {
-		fmt.Printf("\t%d", c.lines)
-		fmt.Printf("\t%d", c.words)
-		fmt.Printf("\t%d", c.bytes)
-	}
 	fmt.Printf(" %s", filename)
 }
 
 func aggregate(c *counter, chunkCounter *counter) {
 	// Not the first chunk.
-	if c.bytes != 0 {
+	if c.words != 0 {
 		if chunkCounter.startsWithChar && c.endsWithChar {
 			c.words -= 1
 		}
@@ -180,6 +186,7 @@ func continuousNewLineIndexes(s string, chunkOrder int) []int {
 
 func main() {
 	var wg sync.WaitGroup
+	var maxLine int
 	opts := parseOptions()
 
 	for _, filepath := range opts.filepaths {
@@ -197,13 +204,15 @@ func main() {
 		wg.Add(1)
 		go func(string) {
 			c := &counter{}
-			bytesChan := readFileInChunks(fp, int(fi.Size()))
-			chunkCounterChan := processChunks(bytesChan)
+			chunks := readFileInChunks(fp, int(fi.Size()))
+			chunkCounterChan := processChunks(chunks, opts)
 
 			for chunkCounter := range chunkCounterChan {
 				aggregate(c, chunkCounter)
 			}
-			maxLine := maxLineLength(c)
+			if opts.maxLine {
+				maxLine = maxLineLength(c)
+			}
 			printResults(c, maxLine, file, opts)
 			wg.Done()
 		}(file)
