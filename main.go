@@ -125,6 +125,30 @@ func maxLineLength(c *counter) int {
 	return maxLine
 }
 
+func printResults(c *counter, maxLine int, filename string, opts *options) {
+	if opts.lines {
+		fmt.Printf("\t%d", c.lines)
+	}
+	if opts.words {
+		fmt.Printf("\t%d", c.words)
+	}
+	if opts.bytes {
+		fmt.Printf("\t%d", c.bytes)
+	}
+	if opts.chars {
+		fmt.Printf("\t%d", c.chars)
+	}
+	if opts.maxLine {
+		fmt.Printf("\t%d", maxLine)
+	}
+	if !opts.lines && !opts.words && !opts.bytes && !opts.chars && !opts.maxLine {
+		fmt.Printf("\t%d", c.lines)
+		fmt.Printf("\t%d", c.words)
+		fmt.Printf("\t%d", c.bytes)
+	}
+	fmt.Printf(" %s", filename)
+}
+
 func aggregate(c *counter, chunkCounter *counter) {
 	// Not the first chunk.
 	if c.bytes != 0 {
@@ -180,13 +204,7 @@ func main() {
 				aggregate(c, chunkCounter)
 			}
 			maxLine := maxLineLength(c)
-
-			fmt.Println(c.bytes)
-			fmt.Println(c.chars)
-			fmt.Println(c.lines)
-			fmt.Println(c.words)
-			fmt.Println(maxLine)
-			fmt.Println(file)
+			printResults(c, maxLine, file, opts)
 			wg.Done()
 		}(file)
 	}

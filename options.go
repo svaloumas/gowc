@@ -28,7 +28,7 @@ ARGS:
 	<input>...    Input file names
 `
 
-type Options struct {
+type options struct {
 	bytes     bool
 	chars     bool
 	lines     bool
@@ -39,8 +39,8 @@ type Options struct {
 	filepaths []string
 }
 
-func parseOptions() *Options {
-	opts := new(Options)
+func parseOptions() *options {
+	opts := new(options)
 	flag.BoolVar(&opts.bytes, "c", false, "print bytes")
 	flag.BoolVar(&opts.bytes, "bytes", false, "print bytes")
 	flag.BoolVar(&opts.chars, "m", false, "print utf-8 characters")
