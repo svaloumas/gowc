@@ -9,6 +9,8 @@ import (
 	"unicode"
 )
 
+const version = "v0.1.0"
+
 type chunk struct {
 	bufChan chan []byte
 	bufSize int
@@ -185,6 +187,10 @@ func main() {
 	var wg sync.WaitGroup
 	var maxLine int
 	opts := parseOptions()
+	if opts.version {
+		fmt.Printf("gowc %s", version)
+		return
+	}
 
 	for _, filepath := range opts.filepaths {
 		fp, err := os.Open(filepath)
