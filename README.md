@@ -43,3 +43,11 @@ ARGS:
 ## Performance
 
 TBD
+
+## Tests
+
+Run the test suite.
+
+```bash
+make test
+```

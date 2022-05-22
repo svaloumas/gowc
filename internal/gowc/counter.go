@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// Counter is wrapper for all the metrics.
 type Counter struct {
 	bytes          int
 	chars          int
@@ -14,6 +15,7 @@ type Counter struct {
 	endsWithChar   bool
 }
 
+// MaxLineLength calculates the longest line length for an aggregated counter.
 func MaxLineLength(c *Counter) int {
 	var maxLine int
 	if len(c.newLineIdxs) > 0 {
@@ -32,6 +34,7 @@ func MaxLineLength(c *Counter) int {
 	return maxLine
 }
 
+// PrintCounter outputs the counter results.
 func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 	if opts.Lines {
 		fmt.Printf("\t%d", c.lines)
@@ -51,6 +54,7 @@ func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 	fmt.Printf(" %s", filename)
 }
 
+// Aggregate aggregates all the metrics from the chunk counters into a main file counter.
 func Aggregate(c *Counter, chunkCounter *Counter) {
 	// Not the first chunk.
 	if c.words != 0 {

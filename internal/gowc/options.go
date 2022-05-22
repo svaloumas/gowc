@@ -8,29 +8,31 @@ import (
 const Version = "v0.1.0"
 
 const usage = `
-gowc ` + Version + `
-A Go word count (wc) clone - print newline, word, char, and byte counts for each file 
+	gowc ` + Version + `
+	A Go word count (wc) clone - print newline, word, char, and byte counts for each file 
 
-USAGE:
-	gowc [FLAGS] [OPTIONS] [input]...
+	USAGE:
+		gowc [FLAGS] [OPTIONS] [input]...
 
-FLAGS:
-		-c, --bytes              Print the byte counts.
-		-m, --chars              Print the character counts.
-		-l, --lines              Print the newline counts.
-		-L, --max-line-length    Print the length of the longest line.
-		-w, --words              Print the word counts.
-		-h, --help               Display help and exit.
-		-V, --version            Output version information and exit.
-		-bs --buffer-size        Configure the buffer size of each chunk to be processed.
+	FLAGS:
+			-c, --bytes              Print the byte counts.
+			-m, --chars              Print the character counts.
+			-l, --lines              Print the newline counts.
+			-L, --max-line-length    Print the length of the longest line.
+			-w, --words              Print the word counts.
+			-h, --help               Display help and exit.
+			-V, --version            Output version information and exit.
+			-bs --buffer-size        Configure the buffer size of each chunk to be processed.
 
-OPTIONS:
-		--files0-from <file>    Read input from the NUL-terminated list of filenames in the given file.
-		--files-from <file>     Read input from the newline-terminated list of filenames in the given file.
-ARGS:
-	<input>...    Input file names
+	OPTIONS:
+			--files0-from <file>    Read input from the NUL-terminated list of filenames in the given file.
+			--files-from <file>     Read input from the newline-terminated list of filenames in the given file.
+	ARGS:
+		<input>...    Input file names
 `
 
+// Options is the flags and options provided
+// by the user via the command line.
 type Options struct {
 	Bytes        bool
 	Chars        bool
@@ -44,6 +46,7 @@ type Options struct {
 	Filepaths    []string
 }
 
+// ParseOptions parses the command line flags and options and stores their values in memory.
 func ParseOptions() *Options {
 	opts := new(Options)
 	flag.BoolVar(&opts.Bytes, "c", false, "print bytes")

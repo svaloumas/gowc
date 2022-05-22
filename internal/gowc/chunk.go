@@ -12,6 +12,7 @@ type chunk struct {
 	offset  int
 }
 
+// ReadFileInChunks reads a given file in chunks and returns a slice of chunks.
 func ReadFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
 
 	concurrency := fileSize / bufferSize
@@ -55,6 +56,8 @@ func ReadFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
 	return chunks
 }
 
+// ProcessChunks process the in-memory chucks in order and produces a counter channel,
+// for the consumer to wait the results for each chunk on.
 func ProcessChunks(chunks []*chunk, opts *Options) <-chan *Counter {
 	out := make(chan *Counter)
 	go func() {
