@@ -7,7 +7,7 @@ import (
 
 const usage = `
 gowc ` + version + `
-A Go word count (wc) clone - print newline, word, and byte counts for each file 
+A Go word count (wc) clone - print newline, word, char, and byte counts for each file 
 
 USAGE:
 	gowc [FLAGS] [OPTIONS] [input]...
@@ -20,6 +20,7 @@ FLAGS:
 		-w, --words              Print the word counts.
 		-h, --help               Display help and exit.
 		-V, --version            Output version information and exit.
+		-bs --buffer-size        Configure the buffer size of each chunk to be processed.
 
 OPTIONS:
 		--files0-from <file>    Read input from the NUL-terminated list of filenames in the given file.
