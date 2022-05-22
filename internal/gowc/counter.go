@@ -34,6 +34,25 @@ func MaxLineLength(c *Counter) int {
 	return maxLine
 }
 
+// Aggregate aggregates all the metrics from the chunk counters into a main file counter.
+func Aggregate(c *Counter, chunkCounter *Counter) {
+	// Not the first chunk.
+	if c.words != 0 {
+		if chunkCounter.startsWithChar && c.endsWithChar {
+			c.words -= 1
+		}
+	}
+	c.startsWithChar = chunkCounter.startsWithChar
+	c.endsWithChar = chunkCounter.endsWithChar
+
+	c.bytes += chunkCounter.bytes
+	c.chars += chunkCounter.chars
+	c.lines += chunkCounter.lines
+	c.words += chunkCounter.words
+
+	c.newLineIdxs = append(c.newLineIdxs, chunkCounter.newLineIdxs...)
+}
+
 // PrintCounter outputs the counter results.
 func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 	if opts.Lines {
@@ -52,23 +71,4 @@ func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 		fmt.Printf("\t%d", maxLine)
 	}
 	fmt.Printf(" %s", filename)
-}
-
-// Aggregate aggregates all the metrics from the chunk counters into a main file counter.
-func Aggregate(c *Counter, chunkCounter *Counter) {
-	// Not the first chunk.
-	if c.words != 0 {
-		if chunkCounter.startsWithChar && c.endsWithChar {
-			c.words -= 1
-		}
-	}
-	c.startsWithChar = chunkCounter.startsWithChar
-	c.endsWithChar = chunkCounter.endsWithChar
-
-	c.bytes += chunkCounter.bytes
-	c.chars += chunkCounter.chars
-	c.lines += chunkCounter.lines
-	c.words += chunkCounter.words
-
-	c.newLineIdxs = append(c.newLineIdxs, chunkCounter.newLineIdxs...)
 }
