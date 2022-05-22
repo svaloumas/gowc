@@ -70,5 +70,5 @@ func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 	if opts.MaxLine {
 		fmt.Printf("\t%d", maxLine)
 	}
-	fmt.Printf(" %s", filename)
+	fmt.Printf(" %s\n", filename)
 }

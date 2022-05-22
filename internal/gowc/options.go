@@ -25,7 +25,6 @@ const usage = `
 			-bs --buffer-size        Configure the buffer size of each chunk to be processed.
 
 	OPTIONS:
-			--files0-from <file>    Read input from the NUL-terminated list of filenames in the given file.
 			--files-from <file>     Read input from the newline-terminated list of filenames in the given file.
 	ARGS:
 		<input>...    Input file names
@@ -34,16 +33,15 @@ const usage = `
 // Options is the flags and options provided
 // by the user via the command line.
 type Options struct {
-	Bytes        bool
-	Chars        bool
-	Lines        bool
-	MaxLine      bool
-	Words        bool
-	Version      bool
-	BufferSize   int
-	FilesFrom    string
-	FilesFromNUL string
-	Filepaths    []string
+	Bytes      bool
+	Chars      bool
+	Lines      bool
+	MaxLine    bool
+	Words      bool
+	Version    bool
+	BufferSize int
+	FilesFrom  string
+	Filepaths  []string
 }
 
 // ParseOptions parses the command line flags and options and stores their values in memory.
@@ -65,7 +63,6 @@ func ParseOptions() *Options {
 	flag.IntVar(&opts.BufferSize, "buffer-size", 4*1024, "buffer size to process concurrently")
 
 	flag.StringVar(&opts.FilesFrom, "files-from", "", "read input from given file (newline terminated list of files)")
-	flag.StringVar(&opts.FilesFromNUL, "files0-from", "", "read input from given file (NUL terminated list of files)")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
