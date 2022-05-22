@@ -1,4 +1,7 @@
 # gowc
+[![CI](https://github.com/svaloumas/gowc/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/gowc/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/svaloumas/gowc/branch/main/graph/badge.svg?token=9CI4Q74JJK)](https://codecov.io/gh/svaloumas/gowc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/svaloumas/gowc)](https://goreportcard.com/report/github.com/svaloumas/gowc)
 
 Just another [`wc`](https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html#wc-invocation) clone written in Go.
 

@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - '**'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.18'
+
+    - name: Test
+      run: make test
+
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.18'
+
+    - name: Coverage report
+      run: make report
+
+    - uses: codecov/codecov-action@v2
+      with:
+        files: ./coverage.out
+        flags: unittests
+        name: codecov-coverage
+        fail_ci_if_error: true
+        verbose: true
