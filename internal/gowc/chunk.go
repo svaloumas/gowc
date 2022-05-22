@@ -92,14 +92,17 @@ func processBuffer(bufChan <-chan []byte, opts *Options, order int) *Counter {
 		chunkCounter.words = len(fields)
 
 		bufRunes := []rune(bufString)
-		firstRune := bufRunes[0]
-		lastRune := bufRunes[len(bufRunes)-1]
+		if len(bufRunes) >= 1 {
 
-		if !unicode.IsSpace(firstRune) {
-			chunkCounter.startsWithChar = true
-		}
-		if !unicode.IsSpace(lastRune) {
-			chunkCounter.endsWithChar = true
+			firstRune := bufRunes[0]
+			lastRune := bufRunes[len(bufRunes)-1]
+
+			if !unicode.IsSpace(firstRune) {
+				chunkCounter.startsWithChar = true
+			}
+			if !unicode.IsSpace(lastRune) {
+				chunkCounter.endsWithChar = true
+			}
 		}
 	}
 	return chunkCounter
