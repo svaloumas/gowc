@@ -1,36 +1,38 @@
 package gowc
 
 import (
+	"bytes"
 	"os"
-	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 type chunk struct {
-	bufChan chan []byte
-	bufSize int
-	offset  int
+	CounterChan chan Counter
+	bufSize     int
+	offset      int
 }
 
 // ReadFileInChunks reads a given file in chunks and returns a slice of chunks.
-func ReadFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
+func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []chunk {
 
-	concurrency := fileSize / bufferSize
-	chunks := make([]*chunk, concurrency)
+	concurrency := fileSize / opts.BufferSize
+	chunks := make([]chunk, concurrency)
 	for i := 0; i < concurrency; i++ {
-		c := &chunk{
-			bufChan: make(chan []byte),
-			bufSize: bufferSize,
-			offset:  bufferSize * i,
+		c := chunk{
+			CounterChan: make(chan Counter),
+			bufSize:     opts.BufferSize,
+			offset:      opts.BufferSize * i,
 		}
 		chunks[i] = c
 	}
 
-	if remainder := fileSize % bufferSize; remainder != 0 {
-		c := &chunk{
-			bufChan: make(chan []byte),
-			bufSize: remainder,
-			offset:  bufferSize * concurrency,
+	remainder := fileSize % opts.BufferSize
+	if remainder != 0 {
+		c := chunk{
+			CounterChan: make(chan Counter),
+			bufSize:     remainder,
+			offset:      opts.BufferSize * concurrency,
 		}
 		concurrency++
 		chunks = append(chunks, c)
@@ -39,7 +41,7 @@ func ReadFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
 	for i := 0; i < concurrency; i++ {
 		idx := i
 
-		go func(chunks []*chunk, i int) {
+		go func(chunks []chunk, idx int) {
 
 			chunk := chunks[idx]
 			buf := make([]byte, chunk.bufSize)
@@ -47,72 +49,55 @@ func ReadFileInChunks(fp *os.File, fileSize, bufferSize int) []*chunk {
 			if err != nil {
 				return
 			}
-			chunk.bufChan <- buf
-			close(chunk.bufChan)
+
+			go func() {
+				chunkCounter := processBuffer(buf, opts, idx)
+				chunk.CounterChan <- chunkCounter
+				close(chunk.CounterChan)
+			}()
 
 		}(chunks, idx)
-
 	}
 	return chunks
 }
 
-// ProcessChunks process the in-memory chucks in order and produces a counter channel,
-// for the consumer to wait the results for each chunk on.
-func ProcessChunks(chunks []*chunk, opts *Options) <-chan *Counter {
-	out := make(chan *Counter)
-	go func() {
-		for i, chunk := range chunks {
-			c := processBuffer(chunk.bufChan, opts, i)
-			out <- c
-		}
-		close(out)
-	}()
-	return out
-}
+func processBuffer(byteArr []byte, opts *Options, order int) Counter {
+	chunkCounter := Counter{}
 
-func processBuffer(bufChan <-chan []byte, opts *Options, order int) *Counter {
-	bytes := <-bufChan
-
-	bufString := string(bytes)
-
-	chunkCounter := &Counter{}
-	if opts.Bytes {
-		chunkCounter.bytes = len(bytes)
-	}
 	if opts.Chars {
-		chunkCounter.chars = len(bufString)
+		chunkCounter.chars = utf8.RuneCount(byteArr)
 	}
-	if opts.Lines || opts.MaxLine {
-		newLineIdxs := continuousNewLineIndexes(bufString, order, opts.BufferSize)
-		chunkCounter.lines = len(newLineIdxs)
+
+	if opts.MaxLine {
+		newLineIdxs := continuousNewLineIndexes(byteArr, order, opts.BufferSize)
 		chunkCounter.newLineIdxs = newLineIdxs
 	}
+
+	if opts.Lines {
+		chunkCounter.lines = bytes.Count(byteArr, []byte{'\n'})
+	}
+
 	if opts.Words {
-		fields := strings.Fields(bufString)
-		chunkCounter.words = len(fields)
+		chunkCounter.words = len(bytes.Fields(byteArr))
 
-		bufRunes := []rune(bufString)
-		if len(bufRunes) >= 1 {
-
-			firstRune := bufRunes[0]
-			lastRune := bufRunes[len(bufRunes)-1]
-
-			if !unicode.IsSpace(firstRune) {
-				chunkCounter.startsWithChar = true
-			}
-			if !unicode.IsSpace(lastRune) {
-				chunkCounter.endsWithChar = true
-			}
+		firstRune := []rune(string(byteArr[0:1]))
+		lastRune := []rune(string(byteArr[len(byteArr)-1:]))
+		if len(firstRune) >= 1 && !unicode.IsSpace(firstRune[0]) {
+			chunkCounter.startsWithChar = true
+		}
+		if len(lastRune) >= 1 && !unicode.IsSpace(lastRune[0]) {
+			chunkCounter.endsWithChar = true
 		}
 	}
 	return chunkCounter
 }
 
-func continuousNewLineIndexes(s string, chunkOrder, bufferSize int) []int {
+func continuousNewLineIndexes(byteArr []byte, chunkOrder, bufferSize int) []int {
 	indexes := []int{}
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
-			orderedIdx := i + (chunkOrder * bufferSize)
+	placement := (chunkOrder * bufferSize)
+	for i, b := range byteArr {
+		if b == '\n' {
+			orderedIdx := i + placement
 			indexes = append(indexes, orderedIdx)
 		}
 	}

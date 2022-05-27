@@ -6,7 +6,7 @@ import (
 
 // Counter is wrapper for all the metrics.
 type Counter struct {
-	bytes          int
+	Bytes          int
 	chars          int
 	lines          int
 	words          int
@@ -16,7 +16,7 @@ type Counter struct {
 }
 
 // MaxLineLength calculates the longest line length for an aggregated counter.
-func MaxLineLength(c *Counter) int {
+func (c *Counter) MaxLineLength() int {
 	var maxLine int
 	if len(c.newLineIdxs) > 0 {
 		for i, idx := range c.newLineIdxs {
@@ -31,11 +31,15 @@ func MaxLineLength(c *Counter) int {
 			}
 		}
 	}
+	lastLine := c.Bytes - c.newLineIdxs[len(c.newLineIdxs)-1] - 1
+	if lastLine > maxLine {
+		maxLine = lastLine
+	}
 	return maxLine
 }
 
 // Aggregate aggregates all the metrics from the chunk counters into a main file counter.
-func Aggregate(c *Counter, chunkCounter *Counter) {
+func (c *Counter) Aggregate(chunkCounter Counter) {
 	// Not the first chunk.
 	if c.words != 0 {
 		if chunkCounter.startsWithChar && c.endsWithChar {
@@ -45,7 +49,6 @@ func Aggregate(c *Counter, chunkCounter *Counter) {
 	c.startsWithChar = chunkCounter.startsWithChar
 	c.endsWithChar = chunkCounter.endsWithChar
 
-	c.bytes += chunkCounter.bytes
 	c.chars += chunkCounter.chars
 	c.lines += chunkCounter.lines
 	c.words += chunkCounter.words
@@ -54,7 +57,7 @@ func Aggregate(c *Counter, chunkCounter *Counter) {
 }
 
 // PrintCounter outputs the counter results.
-func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
+func (c *Counter) PrintCounter(maxLine int, filename string, opts *Options) {
 	if opts.Lines {
 		fmt.Printf("\t%d", c.lines)
 	}
@@ -62,7 +65,7 @@ func PrintCounter(c *Counter, maxLine int, filename string, opts *Options) {
 		fmt.Printf("\t%d", c.words)
 	}
 	if opts.Bytes {
-		fmt.Printf("\t%d", c.bytes)
+		fmt.Printf("\t%d", c.Bytes)
 	}
 	if opts.Chars {
 		fmt.Printf("\t%d", c.chars)

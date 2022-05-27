@@ -34,6 +34,7 @@ const usage = `
 // by the user via the command line.
 type Options struct {
 	Bytes      bool
+	BytesOnly  bool
 	Chars      bool
 	Lines      bool
 	MaxLine    bool
@@ -67,6 +68,9 @@ func ParseOptions() *Options {
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
+	if opts.Bytes && !opts.Words && !opts.Lines && !opts.Chars && !opts.MaxLine {
+		opts.BytesOnly = true
+	}
 	if !opts.Lines && !opts.Words && !opts.Bytes && !opts.Chars && !opts.MaxLine {
 		opts.Lines = true
 		opts.Words = true

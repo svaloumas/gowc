@@ -46,24 +46,28 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		fileSize := fi.Size()
 
 		file := filepath
 		wg.Add(1)
 		go func(string) {
+			defer wg.Done()
 			c := &gowc.Counter{}
-			chunks := gowc.ReadFileInChunks(fp, int(fi.Size()), opts.BufferSize)
-			chunkCounterChan := gowc.ProcessChunks(chunks, opts)
+			c.Bytes = int(fileSize)
+			if !opts.BytesOnly {
+				chunks := gowc.ReadFileInChunks(fp, int(fileSize), opts)
 
-			for chunkCounter := range chunkCounterChan {
-				gowc.Aggregate(c, chunkCounter)
-			}
-			if opts.MaxLine {
-				maxLine = gowc.MaxLineLength(c)
+				for _, chunk := range chunks {
+					chunkCounter := <-chunk.CounterChan
+					c.Aggregate(chunkCounter)
+				}
+				if opts.MaxLine {
+					maxLine = c.MaxLineLength()
+				}
 			}
 			mu.Lock()
-			gowc.PrintCounter(c, maxLine, file, opts)
+			c.PrintCounter(maxLine, file, opts)
 			mu.Unlock()
-			wg.Done()
 		}(file)
 	}
 	wg.Wait()
