@@ -24,17 +24,17 @@ USAGE:
 	gowc [FLAGS] [OPTIONS] [input]...
 
 FLAGS:
-		-c, --bytes              Print the byte counts.
-		-m, --chars              Print the character counts.
-		-l, --lines              Print the newline counts.
-		-L, --max-line-length    Print the length of the longest line.
-		-w, --words              Print the word counts.
-		-h, --help               Display help and exit.
-		-V, --version            Output version information and exit.
-		-bs --buffer-size        Configure the buffer size of each chunk to be processed (defaults to 4096).
+	-c, --bytes              Print the byte counts.
+	-m, --chars              Print the character counts.
+	-l, --lines              Print the newline counts.
+	-L, --max-line-length    Print the length of the longest line.
+	-w, --words              Print the word counts.
+	-h, --help               Display help and exit.
+	-V, --version            Output version information and exit.
+	-bs --buffer-size        Configure the buffer size of each chunk to be processed (defaults to 4096).
 
 OPTIONS:
-		--files-from <file>     Read input from the files specified by a newline-terminated list of filenames in the given file.
+	--files-from <file>     Read input from the files specified by a newline-terminated list of filenames in the given file.
 ARGS:
 	<input>...    Input filenames
 ```
