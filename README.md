@@ -34,7 +34,6 @@ FLAGS:
 		-bs --buffer-size        Configure the buffer size of each chunk to be processed (defaults to 4096).
 
 OPTIONS:
-		--files0-from <file>    Read input from the files specified by a NUL-terminated list of filenames in the given file.
 		--files-from <file>     Read input from the files specified by a newline-terminated list of filenames in the given file.
 ARGS:
 	<input>...    Input filenames
