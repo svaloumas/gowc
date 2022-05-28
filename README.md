@@ -18,19 +18,19 @@ By default, `gowc` will count lines, words, and bytes. You can specify the count
 
 | Flag | Description |
 | ---- | ----------- |
-| -c, --bytes | Print the byte counts. |
-| -m, --chars | Print the character counts. |
-| -l, --lines | Print the newline counts. | 
-| -l, --lines | Print the newline counts. | 
-| -w, --words | Print the word counts. | 
-| -L, --max-line-length | Print the length of the longest line. | 
-| -h, --help | Display help and exit. | 
-| -V, --version | Output version information and exit. | 
+| -c, --bytes | Print the byte counts |
+| -m, --chars | Print the character counts |
+| -l, --lines | Print the newline counts | 
+| -l, --lines | Print the newline counts | 
+| -w, --words | Print the word counts | 
+| -L, --max-line-length | Print the length of the longest line | 
+| -h, --help | Display help and exit | 
+| -V, --version | Output version information and exit | 
 
 | Option | Description |
 | ------ | ----------- |
-| -bs, --buffer-size   | Configure the buffer size of each chunk to be processed (defaults to 4096). | 
-| --files-from <file>  | Read input from the files specified by a newline-terminated list of filenames in the given file. | 
+| -bs, --buffer-size   | Configure the buffer size of each chunk to be processed (defaults to 4096) | 
+| --files-from <file>  | Read input from the files specified by a newline-terminated list of filenames in the given file | 
 
 ```shell
 gowc [FLAGS] [OPTIONS] [FILE]...
@@ -38,7 +38,7 @@ gowc [FLAGS] [OPTIONS] [FILE]...
 
 ## Performance
 
-`hyperfine`(https://github.com/sharkdp/hyperfine) used to perform the benchmarks. The file used is a 595MB CSV with 5m rows.
+[`hyperfine`](https://github.com/sharkdp/hyperfine) is used to perform the benchmarks. The file used is a 595MB CSV with 5m rows.
 
 ```bash
 # New lines only count
