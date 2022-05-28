@@ -24,7 +24,7 @@ func (c *Counter) MaxLineLength() int {
 				maxLine = c.newLineIdxs[i]
 				continue
 			}
-			// Subtrack the current position of idx.
+			// Subtract the current position of idx.
 			nextLine := idx - c.newLineIdxs[i-1] - 1
 			if nextLine > maxLine {
 				maxLine = nextLine

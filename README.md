@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/svaloumas/gowc)](https://goreportcard.com/report/github.com/svaloumas/gowc)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svaloumas/gowc/blob/main/LICENSE)
 
-Just another [`wc`](https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html#wc-invocation) clone written in Go.
+Just another GNU [`wc`](https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html#wc-invocation) clone, written in Go.
 
 ## Overview
 
@@ -27,13 +27,13 @@ By default, `gowc` will count lines, words, and bytes. You can specify the count
 | -h, --help | Display help and exit. | 
 | -V, --version | Output version information and exit. | 
 
-| Option               | Description |
-| -------------------- | ----------- |
+| Option | Description |
+| ------ | ----------- |
 | -bs, --buffer-size   | Configure the buffer size of each chunk to be processed (defaults to 4096). | 
 | --files-from <file>  | Read input from the files specified by a newline-terminated list of filenames in the given file. | 
 
 ```shell
-gowc [FLAGS] [OPTIONS] [input filename]...
+gowc [FLAGS] [OPTIONS] [FILE]...
 ```
 
 ## Performance

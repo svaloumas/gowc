@@ -14,13 +14,14 @@ func main() {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var maxLine int
+	var filepaths []string
+
 	opts := gowc.ParseOptions()
 	if opts.Version {
 		fmt.Printf("gowc %s", gowc.Version)
 		return
 	}
 
-	var filepaths []string
 	if opts.FilesFrom != "" {
 		filefrom, err := os.Open(opts.FilesFrom)
 		if err != nil {

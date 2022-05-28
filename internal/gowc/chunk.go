@@ -7,19 +7,19 @@ import (
 	"unicode/utf8"
 )
 
-type chunk struct {
+type Chunk struct {
 	CounterChan chan Counter
 	bufSize     int
 	offset      int
 }
 
 // ReadFileInChunks reads a given file in chunks and returns a slice of chunks.
-func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []chunk {
+func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []*Chunk {
 
 	concurrency := fileSize / opts.BufferSize
-	chunks := make([]chunk, concurrency)
+	chunks := make([]*Chunk, concurrency)
 	for i := 0; i < concurrency; i++ {
-		c := chunk{
+		c := &Chunk{
 			CounterChan: make(chan Counter),
 			bufSize:     opts.BufferSize,
 			offset:      opts.BufferSize * i,
@@ -29,7 +29,7 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []chunk {
 
 	remainder := fileSize % opts.BufferSize
 	if remainder != 0 {
-		c := chunk{
+		c := &Chunk{
 			CounterChan: make(chan Counter),
 			bufSize:     remainder,
 			offset:      opts.BufferSize * concurrency,
@@ -41,7 +41,7 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []chunk {
 	for i := 0; i < concurrency; i++ {
 		idx := i
 
-		go func(chunks []chunk, idx int) {
+		go func(chunks []*Chunk, idx int) {
 
 			chunk := chunks[idx]
 			buf := make([]byte, chunk.bufSize)
