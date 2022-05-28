@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/svaloumas/gowc/internal/gowc"
+	gowc "github.com/svaloumas/gowc/internal"
 )
 
 func main() {
