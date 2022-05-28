@@ -22,6 +22,21 @@ func TestMaxLineLength(t *testing.T) {
 	}
 }
 
+func TestMaxLineLengthLastLineCase(t *testing.T) {
+	c := &Counter{
+		Bytes:       150,
+		newLineIdxs: []int{12, 14, 35, 59, 66, 90, 101, 104},
+	}
+	// 150 - 104 -1
+	expected := 45
+
+	maxLineLength := c.MaxLineLength()
+
+	if maxLineLength != expected {
+		t.Errorf("MaxLineLength returned wrong length: got %v want %v", maxLineLength, expected)
+	}
+}
+
 func TestAggregate(t *testing.T) {
 	firstChunkCounter := Counter{
 		chars:          1000,
