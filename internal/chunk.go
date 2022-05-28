@@ -20,7 +20,7 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []*Chunk {
 	chunks := make([]*Chunk, concurrency)
 	for i := 0; i < concurrency; i++ {
 		c := &Chunk{
-			CounterChan: make(chan Counter),
+			CounterChan: make(chan Counter, 1),
 			bufSize:     opts.BufferSize,
 			offset:      opts.BufferSize * i,
 		}
@@ -30,7 +30,7 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []*Chunk {
 	remainder := fileSize % opts.BufferSize
 	if remainder != 0 {
 		c := &Chunk{
-			CounterChan: make(chan Counter),
+			CounterChan: make(chan Counter, 1),
 			bufSize:     remainder,
 			offset:      opts.BufferSize * concurrency,
 		}
@@ -50,11 +50,9 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []*Chunk {
 				return
 			}
 
-			go func() {
-				chunkCounter := processBuffer(buf, opts, idx)
-				chunk.CounterChan <- chunkCounter
-				close(chunk.CounterChan)
-			}()
+			chunkCounter := processBuffer(buf, opts, idx)
+			chunk.CounterChan <- chunkCounter
+			close(chunk.CounterChan)
 
 		}(chunks, idx)
 	}
