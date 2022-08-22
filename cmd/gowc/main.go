@@ -13,7 +13,6 @@ import (
 func main() {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var maxLine int
 	var filepaths []string
 
 	opts := gowc.ParseOptions()
@@ -37,11 +36,13 @@ func main() {
 	}
 	opts.Filepaths = append(opts.Filepaths, filepaths...)
 
-	for _, filepath := range opts.Filepaths {
-		fp, err := os.Open(filepath)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if len(opts.Filepaths) == 0 ||
+		(len(opts.Filepaths) == 1 &&
+			(opts.Filepaths[0] == "/dev/stdin" || opts.Filepaths[0] == "/dev/stdin/")) {
+
+		var maxLine int
+
+		fp := os.Stdin
 		defer fp.Close()
 		fi, err := fp.Stat()
 		if err != nil {
@@ -49,7 +50,7 @@ func main() {
 		}
 		fileSize := fi.Size()
 
-		file := filepath
+		file := fp.Name()
 		wg.Add(1)
 		go func(string) {
 			defer wg.Done()
@@ -65,10 +66,44 @@ func main() {
 					maxLine = c.MaxLineLength()
 				}
 			}
-			mu.Lock()
 			c.PrintCounter(maxLine, file, opts)
-			mu.Unlock()
 		}(file)
+	} else {
+		for _, filepath := range opts.Filepaths {
+			var maxLine int
+
+			fp, err := os.Open(filepath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer fp.Close()
+			fi, err := fp.Stat()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fileSize := fi.Size()
+
+			file := filepath
+			wg.Add(1)
+			go func(string) {
+				defer wg.Done()
+				c := &gowc.Counter{}
+				c.Bytes = int(fileSize)
+				if !opts.BytesOnly {
+					chunks := gowc.ReadFileInChunks(fp, int(fileSize), opts)
+
+					for chunk := range chunks {
+						c.Aggregate(chunk.Counter)
+					}
+					if opts.MaxLine {
+						maxLine = c.MaxLineLength()
+					}
+				}
+				mu.Lock()
+				c.PrintCounter(maxLine, file, opts)
+				mu.Unlock()
+			}(file)
+		}
 	}
 	wg.Wait()
 }

@@ -1,6 +1,7 @@
 package gowc
 
 import (
+	"bufio"
 	"bytes"
 	"log"
 	"os"
@@ -19,6 +20,26 @@ func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) chan *Chunk {
 
 	numOfChunks := fileSize / opts.BufferSize
 	chunks := make(chan *Chunk, 1)
+	if fp == os.Stdin {
+		go func() {
+			c := &Chunk{
+				Counter: Counter{},
+			}
+
+			reader := bufio.NewReader(os.Stdin)
+			bytes, err := reader.ReadBytes('\n')
+			if err != nil {
+				log.Printf("error reading file: %s", err)
+				return
+			}
+
+			opts.BufferSize = fileSize
+			c.Counter = processBuffer(bytes, opts, 0)
+			chunks <- c
+			close(chunks)
+		}()
+		return chunks
+	}
 	go func() {
 		for i := 0; i < numOfChunks; i++ {
 			c := &Chunk{
