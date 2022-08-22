@@ -10,7 +10,15 @@ Just another GNU [`wc`](https://www.gnu.org/software/coreutils/manual/html_node/
 
 `gowc` is a simple, zero-dependency command line tool for counting bytes, characters, words and newlines in each given file.
 It leverages the language's built-in support for concurrency by processing the given input files in chunks. The buffer size of each chunk is configurable
-and can be set via `-bs, --buffer-size` flag. The number of go-routines that process the chunks concurrently is calculated as follows `concurrency = filesize / buffersize`.
+and can be set via `-bs, --buffer-size` flag. It reads one chunk ahead while processing the previously read one.
+
+## Installation
+
+```
+make build-linux
+```
+
+Other available options: `build-mac`, `build-win`
 
 ## Usage
 
@@ -42,74 +50,74 @@ gowc [FLAGS] [OPTIONS] [FILE]...
 
 ```bash
 # New lines only count
-$ hyperfine  --warmup 3 './gowc -l -bs 1000000 ./5mSalesRecords.csv' 'wc -l ./5mSalesRecords.csv'
+$ hyperfine  --warmup 3 './gowc -l -bs 1000000 ./5mSalesRecords.csv' 'wc -l ./5mSalesRecords.csv'                                                                        [±main ●]
 Benchmark 1: ./gowc -l -bs 1000000 ./5mSalesRecords.csv
-  Time (mean ± σ):     145.9 ms ±  14.3 ms    [User: 290.0 ms, System: 612.6 ms]
-  Range (min … max):   121.5 ms … 170.0 ms    20 runs
+  Time (mean ± σ):     160.2 ms ±   6.5 ms    [User: 118.5 ms, System: 126.6 ms]
+  Range (min … max):   148.8 ms … 167.4 ms    17 runs
  
 Benchmark 2: wc -l ./5mSalesRecords.csv
-  Time (mean ± σ):     472.3 ms ±   6.1 ms    [User: 384.5 ms, System: 86.3 ms]
-  Range (min … max):   467.7 ms … 488.4 ms    10 runs
+  Time (mean ± σ):     494.3 ms ±  12.3 ms    [User: 397.0 ms, System: 93.8 ms]
+  Range (min … max):   480.8 ms … 517.6 ms    10 runs
  
 Summary
   './gowc -l -bs 1000000 ./5mSalesRecords.csv' ran
-    3.24 ± 0.32 times faster than 'wc -l ./5mSalesRecords.csv'
+    3.08 ± 0.15 times faster than 'wc -l ./5mSalesRecords.csv'
 
 # Default lines, words and bytes count
-$ hyperfine  --warmup 3 './gowc -bs 1000000 ./5mSalesRecords.csv' 'wc ./5mSalesRecords.csv'
+hyperfine  --warmup 3 './gowc -bs 1000000 ./5mSalesRecords.csv' 'wc ./5mSalesRecords.csv'                                                                              [±main ●]
 Benchmark 1: ./gowc -bs 1000000 ./5mSalesRecords.csv
-  Time (mean ± σ):     444.2 ms ±  17.5 ms    [User: 2571.0 ms, System: 493.4 ms]
-  Range (min … max):   423.8 ms … 480.8 ms    10 runs
+  Time (mean ± σ):      1.542 s ±  0.008 s    [User: 1.554 s, System: 0.239 s]
+  Range (min … max):    1.532 s …  1.559 s    10 runs
  
 Benchmark 2: wc ./5mSalesRecords.csv
-  Time (mean ± σ):      2.020 s ±  0.009 s    [User: 1.925 s, System: 0.092 s]
-  Range (min … max):    2.009 s …  2.035 s    10 runs
+  Time (mean ± σ):      2.045 s ±  0.009 s    [User: 1.946 s, System: 0.097 s]
+  Range (min … max):    2.033 s …  2.058 s    10 runs
  
 Summary
   './gowc -bs 1000000 ./5mSalesRecords.csv' ran
-    4.55 ± 0.18 times faster than 'wc ./5mSalesRecords.csv'
+    1.33 ± 0.01 times faster than 'wc ./5mSalesRecords.csv'
 
 # Word only count
-$ hyperfine  --warmup 3 './gowc -w -bs 1000000 ./5mSalesRecords.csv' 'wc -w ./5mSalesRecords.csv'
+$ hyperfine  --warmup 3 './gowc -w -bs 1000000 ./5mSalesRecords.csv' 'wc -w ./5mSalesRecords.csv'                                                                        [±main ●]
 Benchmark 1: ./gowc -w -bs 1000000 ./5mSalesRecords.csv
-  Time (mean ± σ):     429.8 ms ±  18.7 ms    [User: 2500.1 ms, System: 474.4 ms]
-  Range (min … max):   409.7 ms … 464.2 ms    10 runs
+  Time (mean ± σ):      1.537 s ±  0.012 s    [User: 1.548 s, System: 0.240 s]
+  Range (min … max):    1.520 s …  1.566 s    10 runs
  
 Benchmark 2: wc -w ./5mSalesRecords.csv
-  Time (mean ± σ):      2.004 s ±  0.010 s    [User: 1.912 s, System: 0.090 s]
-  Range (min … max):    1.991 s …  2.022 s    10 runs
+  Time (mean ± σ):      2.041 s ±  0.011 s    [User: 1.941 s, System: 0.097 s]
+  Range (min … max):    2.029 s …  2.063 s    10 runs
  
 Summary
   './gowc -w -bs 1000000 ./5mSalesRecords.csv' ran
-    4.66 ± 0.20 times faster than 'wc -w ./5mSalesRecords.csv'
+    1.33 ± 0.01 times faster than 'wc -w ./5mSalesRecords.csv'
 
 # Characters only count
-$ hyperfine  --warmup 3 './gowc -m -bs 1000000 ./5mSalesRecords.csv' 'wc -m ./5mSalesRecords.csv'
+$ hyperfine  --warmup 3 './gowc -m -bs 1000000 ./5mSalesRecords.csv' 'wc -m ./5mSalesRecords.csv'                                                                        [±main ●]
 Benchmark 1: ./gowc -m -bs 1000000 ./5mSalesRecords.csv
-  Time (mean ± σ):     241.2 ms ±   9.1 ms    [User: 1157.2 ms, System: 450.7 ms]
-  Range (min … max):   229.8 ms … 263.6 ms    12 runs
+  Time (mean ± σ):     751.9 ms ±   6.4 ms    [User: 707.1 ms, System: 149.5 ms]
+  Range (min … max):   741.9 ms … 759.5 ms    10 runs
  
 Benchmark 2: wc -m ./5mSalesRecords.csv
-  Time (mean ± σ):      5.467 s ±  0.014 s    [User: 5.364 s, System: 0.097 s]
-  Range (min … max):    5.451 s …  5.501 s    10 runs
+  Time (mean ± σ):      5.667 s ±  0.094 s    [User: 5.539 s, System: 0.113 s]
+  Range (min … max):    5.578 s …  5.794 s    10 runs
  
 Summary
   './gowc -m -bs 1000000 ./5mSalesRecords.csv' ran
-   22.66 ± 0.85 times faster than 'wc -m ./5mSalesRecords.csv'
+    7.54 ± 0.14 times faster than 'wc -m ./5mSalesRecords.csv'
 
 # Multiple files
-$ hyperfine  --warmup 3 './gowc -bs 1000000 ./5mSalesRecords.csv ./5mSalesRecords.csv' 'wc ./5mSalesRecords.csv ./5mSalesRecords.csv'
+$ hyperfine  --warmup 3 './gowc -bs 1000000 ./5mSalesRecords.csv ./5mSalesRecords.csv' 'wc ./5mSalesRecords.csv ./5mSalesRecords.csv'                [±main ●]
 Benchmark 1: ./gowc -bs 1000000 ./5mSalesRecords.csv ./5mSalesRecords.csv
-  Time (mean ± σ):     849.4 ms ±  33.1 ms    [User: 5082.0 ms, System: 844.0 ms]
-  Range (min … max):   816.1 ms … 929.3 ms    10 runs
+  Time (mean ± σ):      1.698 s ±  0.009 s    [User: 3.271 s, System: 0.515 s]
+  Range (min … max):    1.684 s …  1.708 s    10 runs
  
 Benchmark 2: wc ./5mSalesRecords.csv ./5mSalesRecords.csv
-  Time (mean ± σ):      4.205 s ±  0.197 s    [User: 3.975 s, System: 0.205 s]
-  Range (min … max):    3.951 s …  4.502 s    10 runs
+  Time (mean ± σ):      4.082 s ±  0.013 s    [User: 3.886 s, System: 0.192 s]
+  Range (min … max):    4.062 s …  4.102 s    10 runs
  
 Summary
   './gowc -bs 1000000 ./5mSalesRecords.csv ./5mSalesRecords.csv' ran
-    4.95 ± 0.30 times faster than 'wc ./5mSalesRecords.csv ./5mSalesRecords.csv'
+    2.40 ± 0.01 times faster than 'wc ./5mSalesRecords.csv ./5mSalesRecords.csv
 ```
 
 ## Tests

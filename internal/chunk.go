@@ -2,60 +2,62 @@ package gowc
 
 import (
 	"bytes"
+	"log"
 	"os"
 	"unicode"
 	"unicode/utf8"
 )
 
 type Chunk struct {
-	CounterChan chan Counter
-	bufSize     int
-	offset      int
+	Counter Counter
+	bufSize int
+	offset  int
 }
 
 // ReadFileInChunks reads a given file in chunks and returns a slice of chunks.
-func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) []*Chunk {
+func ReadFileInChunks(fp *os.File, fileSize int, opts *Options) chan *Chunk {
 
-	concurrency := fileSize / opts.BufferSize
-	chunks := make([]*Chunk, concurrency)
-	for i := 0; i < concurrency; i++ {
-		c := &Chunk{
-			CounterChan: make(chan Counter, 1),
-			bufSize:     opts.BufferSize,
-			offset:      opts.BufferSize * i,
-		}
-		chunks[i] = c
-	}
+	numOfChunks := fileSize / opts.BufferSize
+	chunks := make(chan *Chunk, 1)
+	go func() {
+		for i := 0; i < numOfChunks; i++ {
+			c := &Chunk{
+				Counter: Counter{},
+				bufSize: opts.BufferSize,
+				offset:  opts.BufferSize * i,
+			}
 
-	remainder := fileSize % opts.BufferSize
-	if remainder != 0 {
-		c := &Chunk{
-			CounterChan: make(chan Counter, 1),
-			bufSize:     remainder,
-			offset:      opts.BufferSize * concurrency,
-		}
-		concurrency++
-		chunks = append(chunks, c)
-	}
-
-	for i := 0; i < concurrency; i++ {
-		idx := i
-
-		go func(chunks []*Chunk, idx int) {
-
-			chunk := chunks[idx]
-			buf := make([]byte, chunk.bufSize)
-			_, err := fp.ReadAt(buf, int64(chunk.offset))
+			buf := make([]byte, c.bufSize)
+			_, err := fp.ReadAt(buf, int64(c.offset))
 			if err != nil {
+				log.Printf("error reading file: %s", err)
 				return
 			}
 
-			chunkCounter := processBuffer(buf, opts, idx)
-			chunk.CounterChan <- chunkCounter
-			close(chunk.CounterChan)
+			c.Counter = processBuffer(buf, opts, i)
+			chunks <- c
+		}
 
-		}(chunks, idx)
-	}
+		remainder := fileSize % opts.BufferSize
+		if remainder != 0 {
+			c := &Chunk{
+				Counter: Counter{},
+				bufSize: remainder,
+				offset:  opts.BufferSize * numOfChunks,
+			}
+
+			buf := make([]byte, c.bufSize)
+			_, err := fp.ReadAt(buf, int64(c.offset))
+			if err != nil {
+				log.Printf("error reading file: %s", err)
+				return
+			}
+
+			c.Counter = processBuffer(buf, opts, numOfChunks)
+			chunks <- c
+		}
+		close(chunks)
+	}()
 	return chunks
 }
 

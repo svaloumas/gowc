@@ -58,9 +58,8 @@ func main() {
 			if !opts.BytesOnly {
 				chunks := gowc.ReadFileInChunks(fp, int(fileSize), opts)
 
-				for _, chunk := range chunks {
-					chunkCounter := <-chunk.CounterChan
-					c.Aggregate(chunkCounter)
+				for chunk := range chunks {
+					c.Aggregate(chunk.Counter)
 				}
 				if opts.MaxLine {
 					maxLine = c.MaxLineLength()

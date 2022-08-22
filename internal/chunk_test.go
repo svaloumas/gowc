@@ -91,16 +91,16 @@ func TestReadFileInChunks(t *testing.T) {
 
 	chunks := ReadFileInChunks(fp, fileSize, opts)
 
-	for i, chunk := range chunks {
-		c := <-chunk.CounterChan
+	i := 0
+	for chunk := range chunks {
 
-		if eq := reflect.DeepEqual(c, counters[i]); !eq {
-			t.Errorf("ReadFileInChunks returned wrong bytes count: got %v want %v", c, counters[i])
+		if eq := reflect.DeepEqual(chunk.Counter, counters[i]); !eq {
+			t.Errorf("ReadFileInChunks returned wrong bytes count: got %v want %v", chunk.Counter, counters[i])
 		}
 
 		bufSize := chunk.bufSize
 		// Last chunk should have a buffer size equal to remainder.
-		if i == len(chunks)-1 {
+		if i == len(counters)-1 {
 			if bufSize != remainder {
 				t.Errorf("ReadFileInChunks returned wrong chunk buffer size: got %v want %v", bufSize, remainder)
 			}
@@ -114,5 +114,6 @@ func TestReadFileInChunks(t *testing.T) {
 		if offset != bufferSize*i {
 			t.Errorf("ReadFileInChunks returned wrong chunk buffer size: got %v want %v", offset, bufferSize*i)
 		}
+		i++
 	}
 }
